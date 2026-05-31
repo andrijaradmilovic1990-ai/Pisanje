@@ -1,28 +1,26 @@
 {
   "name": "Pisalnica",
   "short_name": "Pisalnica",
-  "description": "Lično mesto za pisanje priča",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/Pisanje/",
+  "scope": "/Pisanje/",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#13110e",
   "theme_color": "#13110e",
   "icons": [
     {
-      "src": "./icon-192.png",
+      "src": "/Pisanje/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./icon-512.png",
+      "src": "/Pisanje/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./icon-512.png",
+      "src": "/Pisanje/icon-maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
