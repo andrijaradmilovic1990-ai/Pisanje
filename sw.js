@@ -1,8 +1,8 @@
-const CACHE='pisalnica-v4';
+const CACHE='pisalnica-v5';
 const ASSETS=['/Pisanje/','/Pisanje/index.html','/Pisanje/manifest.json','/Pisanje/icon-192.png','/Pisanje/icon-512.png','/Pisanje/icon-maskable.png'];
 
 self.addEventListener('install',e=>{
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c=>Promise.all(ASSETS.map(a=>c.add(a).catch(()=>{})))).then(()=>self.skipWaiting()));
 });
 self.addEventListener('activate',e=>{
   e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));

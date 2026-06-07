@@ -53,6 +53,7 @@
   .topbar .streak{font-size:12px;color:var(--text3);white-space:nowrap;letter-spacing:.02em}
   .topbar .icon-btn{background:none;border:none;color:var(--text2);font-size:19px;cursor:pointer;padding:.3rem .45rem;line-height:1;transition:color .2s}
   .topbar .icon-btn:active{color:var(--accent)}
+  .topbar .icon-btn.install{color:var(--accent);font-size:21px}
   .screen{flex:1;overflow-y:auto;display:none;flex-direction:column;-webkit-overflow-scrolling:touch}
   .screen.active{display:flex;animation:fade .35s ease}
   @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -81,14 +82,28 @@
   .add-btn:active{transform:scale(.98);box-shadow:0 2px 10px rgba(201,165,92,.2)}
   .empty{text-align:center;color:var(--text2);font-size:15px;padding:3.5rem 1rem 2rem;line-height:1.9;font-family:var(--display);font-style:italic}
   .empty .big{font-size:34px;display:block;margin-bottom:.8rem;opacity:.5;font-style:normal}
-  .export-bar{display:flex;gap:.5rem;max-width:680px;margin:0 auto .9rem;width:100%}
+  .export-bar{display:flex;gap:.5rem;max-width:680px;margin:0 auto .9rem;width:100%;flex-wrap:wrap}
   .export-btn{
-    flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+    flex:1;min-width:72px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
     padding:.7rem;color:var(--accent);font-size:13.5px;font-weight:600;cursor:pointer;
     display:flex;align-items:center;justify-content:center;gap:.4rem;transition:background .2s
   }
   .export-btn:active{background:var(--surface2)}
   .editor-area{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+  .fmt-bar{
+    display:flex;gap:.4rem;align-items:center;
+    padding:.45rem 1.4rem;max-width:680px;margin:0 auto;width:100%;
+    border-bottom:1px solid var(--border);flex-shrink:0;
+  }
+  .fmt-btn{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+    min-width:42px;height:34px;color:var(--text2);font-size:15px;cursor:pointer;
+    font-family:var(--body);transition:all .15s;display:inline-flex;align-items:center;justify-content:center;
+  }
+  .fmt-btn:active{background:var(--surface2);color:var(--accent)}
+  .fmt-btn b{font-weight:800}
+  .fmt-btn i{font-style:italic}
+  .fmt-hint{margin-left:auto;font-size:11px;color:var(--text3);letter-spacing:.02em}
   .editor-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
   .editor-inner{max-width:680px;margin:0 auto;width:100%;padding:1rem 1.4rem 6rem}
   .editor-text{
@@ -137,6 +152,7 @@
   <button class="back" id="backBtn" onclick="goBack()">‹</button>
   <span class="title" id="topTitle"><span class="logo">Pisal<span class="ink">nica</span></span></span>
   <span class="streak" id="streakLbl"></span>
+  <button class="icon-btn install" id="installBtn" onclick="doInstall()" style="display:none" title="Instaliraj aplikaciju">⤓</button>
   <button class="icon-btn" id="settingsBtn" onclick="openSettings()">⚙</button>
 </div>
 
@@ -152,6 +168,7 @@
   <div class="list-wrap">
     <div class="export-bar">
       <button class="export-btn" onclick="exportStory('md')">📤 .md</button>
+      <button class="export-btn" onclick="exportStory('doc')">📝 Word</button>
       <button class="export-btn" onclick="exportStory('pdf')">📄 PDF</button>
       <button class="export-btn" onclick="openImport()">📥 Nalepi</button>
     </div>
@@ -162,6 +179,11 @@
 
 <div class="screen" id="screen-editor">
   <div class="editor-area">
+    <div class="fmt-bar">
+      <button class="fmt-btn" onmousedown="fmtMouse(event)" ontouchstart="fmtMouse(event)" onclick="wrapSel('**')" title="Podebljano"><b>B</b></button>
+      <button class="fmt-btn" onmousedown="fmtMouse(event)" ontouchstart="fmtMouse(event)" onclick="wrapSel('*')" title="Kurziv"><i>I</i></button>
+      <span class="fmt-hint">selektuj reč pa klikni</span>
+    </div>
     <div class="editor-scroll">
       <div class="editor-inner">
         <textarea class="editor-text" id="editor" placeholder="Počni da pišeš…" oninput="onEditorInput()"></textarea>
@@ -189,6 +211,7 @@
     </div>
     <div class="about">
       „Pisanje je lako. Samo zuriš u prazan papir<br>dok ti kapljice krvi ne izbiju na čelu."<br><br>
+      <b>**ovako**</b> = podebljano · <i>*ovako*</i> = kurziv<br><br>
       Sve se čuva lokalno na ovom uređaju.
     </div>
   </div>
@@ -232,6 +255,7 @@
     <div class="sheet-grip"></div>
     <button class="sheet-item" onclick="sheetRename()"><span class="si">✏️</span> Preimenuj</button>
     <button class="sheet-item" onclick="sheetExport('md')"><span class="si">📤</span> Izvezi .md</button>
+    <button class="sheet-item" onclick="sheetExport('doc')"><span class="si">📝</span> Izvezi Word</button>
     <button class="sheet-item" onclick="sheetExport('pdf')"><span class="si">📄</span> Izvezi PDF</button>
     <button class="sheet-item danger" onclick="sheetDelete()"><span class="si">🗑️</span> Obriši</button>
   </div>
@@ -325,6 +349,21 @@ window.onEditorInput=function(){updateWordcount();clearTimeout(saveTimer);saveTi
 function flushSave(){const ch=chapter(story(curStory),curChapter);if(!ch)return;ch.text=document.getElementById('editor').value;save();bumpStreak()}
 function updateWordcount(){document.getElementById('wordcount').textContent=countWords(document.getElementById('editor').value)+' reči'}
 
+/* ---- Markdown formatiranje (bold/kurziv) ---- */
+function fmtMouse(e){ e.preventDefault(); } // sačuvaj selekciju u textarea
+window.wrapSel=function(marker){
+  const ta=document.getElementById('editor');
+  const s=ta.selectionStart, e=ta.selectionEnd, val=ta.value, sel=val.slice(s,e);
+  if(sel){
+    ta.value=val.slice(0,s)+marker+sel+marker+val.slice(e);
+    ta.selectionStart=s+marker.length; ta.selectionEnd=e+marker.length;
+  } else {
+    ta.value=val.slice(0,s)+marker+marker+val.slice(e);
+    ta.selectionStart=ta.selectionEnd=s+marker.length;
+  }
+  ta.focus(); onEditorInput();
+};
+
 let nameMode=null,nameTargetId=null;
 function openName(mode,title,val,targetId){
   nameMode=mode;nameTargetId=targetId||null;
@@ -371,8 +410,8 @@ window.sheetRename=function(){
 };
 window.sheetExport=function(fmt){
   closeSheet();
-  if(sheetType==='story'){const s=story(sheetId);if(s){fmt==='pdf'?exportPdf(s.title,storyToHtml(s)):download(safeName(s.title)+'.md',storyToMd(s))}}
-  else{const ch=chapter(story(curStory),sheetId);if(ch){fmt==='pdf'?exportPdf(ch.title,chapterToHtml(ch)):download(safeName(ch.title)+'.md',chapterToMd(ch))}}
+  if(sheetType==='story'){const s=story(sheetId);if(s){doExport(fmt,s.title,storyToHtml(s),storyToMd(s))}}
+  else{const ch=chapter(story(curStory),sheetId);if(ch){doExport(fmt,ch.title,chapterToHtml(ch),chapterToMd(ch))}}
 };
 window.sheetDelete=function(){
   closeSheet();delType=sheetType;delId=sheetId;
@@ -392,8 +431,15 @@ window.confirmDelete=function(){
 function chapterToMd(ch){return '## '+ch.title+'\n\n'+(ch.text||'').trim()+'\n'}
 function storyToMd(s){let md='# '+s.title+'\n\n';s.chapters.forEach(ch=>{md+='## '+ch.title+'\n\n'+(ch.text||'').trim()+'\n\n'});return md.trim()+'\n'}
 
+/* ---- Markdown -> HTML (bold/kurziv) ---- */
+function mdInline(s){
+  s=esc(s);
+  s=s.replace(/\*\*([^*\n]+?)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/\*([^*\n]+?)\*/g,'<em>$1</em>');
+  return s;
+}
 function txtToParas(t){
-  return (t||'').trim().split(/\n\s*\n/).map(p=>'<p>'+esc(p).replace(/\n/g,'<br>')+'</p>').join('');
+  return (t||'').trim().split(/\n\s*\n/).map(p=>'<p>'+mdInline(p).replace(/\n/g,'<br>')+'</p>').join('');
 }
 function chapterToHtml(ch){return '<h2>'+esc(ch.title)+'</h2>'+txtToParas(ch.text)}
 function storyToHtml(s){let h='';s.chapters.forEach((ch,i)=>{h+=(i>0?'<div class="pb"></div>':'')+'<h2>'+esc(ch.title)+'</h2>'+txtToParas(ch.text)});return h}
@@ -429,15 +475,38 @@ function exportPdf(title,bodyHtml){
   w.document.close();
 }
 
-function download(filename,text){
-  const blob=new Blob([text],{type:'text/markdown;charset=utf-8'});
+function exportWord(title,bodyHtml){
+  const html=`<!DOCTYPE html><html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset="utf-8"><title>${esc(title)}</title>
+<style>
+body{font-family:Georgia,'Times New Roman',serif;font-size:12pt;line-height:1.6;color:#1a1a1a}
+h1{text-align:center;font-size:22pt;margin:0 0 .2em}
+.sub{text-align:center;color:#9a7a3a;font-size:10pt;letter-spacing:.2em;text-transform:uppercase;margin-bottom:2em}
+h2{font-size:15pt;margin:1.6em 0 .6em}
+p{text-align:justify;text-indent:1.4em;margin:0 0 .4em}
+.pb{page-break-before:always}
+</style></head><body>
+<h1>${esc(title)}</h1><div class="sub">Pisalnica</div>
+${bodyHtml}</body></html>`;
+  downloadBlob(safeName(title)+'.doc','﻿'+html,'application/msword');
+}
+
+function doExport(fmt,title,bodyHtml,mdText){
+  if(fmt==='pdf')exportPdf(title,bodyHtml);
+  else if(fmt==='doc')exportWord(title,bodyHtml);
+  else download(safeName(title)+'.md',mdText);
+}
+
+function download(filename,text){ downloadBlob(filename,text,'text/markdown'); }
+function downloadBlob(filename,content,type){
+  const blob=new Blob([content],{type:type+';charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=filename;
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function safeName(s){return (s||'tekst').replace(/[^\p{L}\p{N} _-]/gu,'').trim().replace(/\s+/g,'_')||'tekst'}
-window.exportStory=function(fmt){const s=story(curStory);if(!s)return;fmt==='pdf'?exportPdf(s.title,storyToHtml(s)):download(safeName(s.title)+'.md',storyToMd(s))};
+window.exportStory=function(fmt){const s=story(curStory);if(!s)return;doExport(fmt,s.title,storyToHtml(s),storyToMd(s))};
 window.exportAll=function(){if(!data.stories.length)return;let md='';data.stories.forEach(s=>{md+=storyToMd(s)+'\n---\n\n'});download('Pisalnica_'+todayStr()+'.md',md.trim()+'\n')};
 
 window.setTheme=function(t){data.theme=t;save();applyTheme()};
@@ -449,6 +518,12 @@ function applyTheme(){
   const meta=document.querySelector('meta[name=theme-color]');
   if(meta)meta.content=getComputedStyle(document.body).getPropertyValue('--bg').trim();
 }
+
+/* ---- Instalacija (PWA) ---- */
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;const b=document.getElementById('installBtn');if(b)b.style.display='block'});
+window.doInstall=async function(){if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;const b=document.getElementById('installBtn');if(b)b.style.display='none'};
+window.addEventListener('appinstalled',()=>{const b=document.getElementById('installBtn');if(b)b.style.display='none'});
 
 applyTheme();renderLibrary();show('library');
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/Pisanje/sw.js').catch(()=>{})}
