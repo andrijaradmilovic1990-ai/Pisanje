@@ -144,6 +144,28 @@
   .theme-chip{padding:.45rem .9rem;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:13px;cursor:pointer;font-family:var(--body);transition:all .2s}
   .theme-chip.active{background:var(--accent);color:#1a1610;border-color:var(--accent);font-weight:600}
   .about{text-align:center;color:var(--text3);font-size:13.5px;padding:2rem 1rem 1rem;line-height:1.9;font-family:var(--display);font-style:italic}
+  .kafana-btn{
+    width:100%;max-width:680px;margin:.55rem auto 0;display:flex;align-items:center;justify-content:center;gap:.5rem;
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:.9rem;color:var(--accent);font-size:14.5px;font-family:var(--body);cursor:pointer;
+    box-shadow:var(--shadow);transition:transform .15s,background .2s;letter-spacing:.01em;
+  }
+  .kafana-btn:active{transform:scale(.98);background:var(--surface2)}
+  .kafana-btn .k-sub{color:var(--text3);font-size:12.5px;font-style:italic}
+  .kafana-btns{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.9rem}
+  .k-btn{
+    flex:1;min-width:130px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);
+    padding:.8rem .55rem;color:var(--text2);font-size:13.5px;font-family:var(--body);cursor:pointer;transition:all .2s;
+  }
+  .k-btn:active{background:var(--surface2);color:var(--accent)}
+  .k-glass{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:1.6rem 1.4rem;min-height:120px;display:flex;align-items:center;box-shadow:var(--shadow);
+  }
+  .k-glass p{font-family:var(--display);font-style:italic;font-size:17.5px;line-height:1.7;color:var(--text);transition:opacity .35s;margin:0}
+  .k-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.8rem;color:var(--text3);font-size:12px;letter-spacing:.03em}
+  .k-copy{background:none;border:1px solid var(--border);border-radius:20px;padding:.45rem .95rem;color:var(--accent);font-size:12.5px;cursor:pointer;font-family:var(--body);transition:background .2s}
+  .k-copy:active{background:var(--surface2)}
 </style>
 </head>
 <body>
@@ -161,6 +183,7 @@
     <div class="section-hint" id="lib-hint">Tvoje priče</div>
     <div id="story-list"></div>
     <button class="add-btn" onclick="openNewStory()">✒ Nova priča</button>
+    <button class="kafana-btn" onclick="openKafana()">🥃 Kafana <span class="k-sub">· otvoreno do zore</span></button>
   </div>
 </div>
 
@@ -190,6 +213,22 @@
       </div>
     </div>
     <div class="wordcount" id="wordcount">0 reči</div>
+  </div>
+</div>
+
+<div class="screen" id="screen-kafana">
+  <div class="list-wrap">
+    <div class="section-hint">Šank · samo za pisce</div>
+    <div class="kafana-btns">
+      <button class="k-btn" onclick="sipaj('recenice')">✒ Prva rečenica</button>
+      <button class="k-btn" onclick="sipaj('likovi')">👤 Lik za priču</button>
+      <button class="k-btn" onclick="sipaj('pitanja')">🌙 Pitanje za 3 ujutru</button>
+    </div>
+    <div class="k-glass" id="kGlass"><p id="kTekst">Sedi. Šta pijemo večeras?</p></div>
+    <div class="k-foot">
+      <span id="kBrojac">popijeno: 0</span>
+      <button class="k-copy" id="kCopy" onclick="kKopiraj()" style="display:none">⎘ Prepiši</button>
+    </div>
   </div>
 </div>
 
@@ -300,6 +339,7 @@ function show(v){
   else if(v==='chapters')title.textContent=story(curStory)?.title||'';
   else if(v==='editor')title.textContent=chapter(story(curStory),curChapter)?.title||'';
   else if(v==='settings')title.textContent='Podešavanja';
+  else if(v==='kafana')title.textContent='Kafana';
   renderStreak();
 }
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
@@ -342,8 +382,10 @@ window.goBack=function(){
   if(view==='editor'){flushSave();show('chapters');renderChapters()}
   else if(view==='chapters'){show('library');renderLibrary()}
   else if(view==='settings'){show('library');renderLibrary()}
+  else if(view==='kafana'){show('library');renderLibrary()}
 };
 window.openSettings=function(){show('settings')};
+window.openKafana=function(){show('kafana')};
 
 window.onEditorInput=function(){updateWordcount();clearTimeout(saveTimer);saveTimer=setTimeout(flushSave,400)};
 function flushSave(){const ch=chapter(story(curStory),curChapter);if(!ch)return;ch.text=document.getElementById('editor').value;save();bumpStreak()}
@@ -518,6 +560,67 @@ function applyTheme(){
   const meta=document.querySelector('meta[name=theme-color]');
   if(meta)meta.content=getComputedStyle(document.body).getPropertyValue('--bg').trim();
 }
+
+/* ---- Kafana „Kod Helene" ---- */
+const kFlase={
+  recenice:[
+    "Kazaljka je prešla tri ujutru, a nijedan od nas dvojice nije imao kuda da ode.",
+    "Sahranili smo ga u utorak, a u sredu je stigla njegova razglednica iz Grčke.",
+    "Konobarica je znala moje ime, a ja sam dolazio dovoljno dugo da znam da to nije kompliment.",
+    "Poslednji autobus je otišao, i to je bila najbolja stvar koja mi se desila te godine.",
+    "Otac mi je ostavio sat koji ne radi i savet koji radi previše dobro.",
+    "Pas je čekao ispred kafane četiri godine. Onda je jedne noći jednostavno ušao.",
+    "Pisala je samo kad je bila pijana, pa su joj pisma stizala iskrena.",
+    "Niko ne primeti kad čovek odustane. To se ne desi naglo, kao pad. Desi se kao curenje.",
+    "Komšija je svirao harmoniku svake noći u dva. Kad je umro, niko od nas nije mogao da spava.",
+    "Prodao sam očev pištolj da platim njenu kartu u jednom pravcu. Oboje smo dobro prošli.",
+    "U bolničkoj čekaonici svi smo jednaki: svi lažemo da je sve u redu.",
+    "Zima te godine nije dolazila. Čekali smo je kao dug koji mora da se vrati."
+  ],
+  likovi:[
+    "Bivši bokser koji plače na tuđim sahranama — za pare, ali poslednjih meseci i besplatno.",
+    "Žena koja svake večeri postavlja sto za dvoje, već sedam godina.",
+    "Taksista koji pamti svaku ispovest, a svoju nije nikome rekao.",
+    "Sveštenik koji je izgubio veru, ali ne i parohiju — jer ljudi ne traže Boga, traže nekog da ih sasluša.",
+    "Kockar koji uvek pobeđuje, i upravo zato nema nikoga.",
+    "Devojka sa železničke stanice koja prodaje cveće mrtvima i živima po istoj ceni.",
+    "Starac koji svaki dan piše pismo, i svaki dan ga pocepa pre potpisa.",
+    "Konobar koji zna tačno kad će ko da zaplače — po tome šta poruči.",
+    "Pesnik koji nikad ništa nije objavio, jer mu je strah veći od dara, a dar nije mali.",
+    "Medicinska sestra noćne smene koja umire od istog onoga od čega čuva druge."
+  ],
+  pitanja:[
+    "Da li je gore izdati nekoga, ili gledati kako sebe izdaje — i ćutati?",
+    "Koliko puta čovek može da počne ispočetka pre nego što ispočetka postane laž?",
+    "Šta bi rekao sebi od pre deset godina — i da li bi te onaj uopšte slušao?",
+    "Da li su naši mrtvi onakvi kakvi su bili, ili onakvi kakvima ih pamtimo da bismo mogli da spavamo?",
+    "Ako bol pravi pisce, koliko bi platio da nikad nisi naučio da pišeš?",
+    "Šta je teže oprostiti: ono što su ti uradili, ili ono što si dozvolio?",
+    "Kad poslednji put nisi glumio ništa — ni za koga, ni sebi?",
+    "Da li je nada vrlina ili samo navika koje se nismo otarasili?",
+    "Šta od tebe ostane kad svi koji te pamte odu?",
+    "Da li je samoća kazna ili odgovor?"
+  ]
+};
+let kRedovi={},kPopijeno=0,kTrenutna='';
+function kPromesaj(n){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+window.sipaj=function(kat){
+  if(!kRedovi[kat]||!kRedovi[kat].length)kRedovi[kat]=kPromesaj(kFlase[kat].length);
+  kTrenutna=kFlase[kat][kRedovi[kat].pop()];
+  const t=document.getElementById('kTekst');
+  t.style.opacity=0;
+  setTimeout(()=>{t.textContent='„'+kTrenutna+'“';t.style.opacity=1},280);
+  kPopijeno++;
+  document.getElementById('kBrojac').textContent='popijeno: '+kPopijeno;
+  document.getElementById('kCopy').style.display='inline-block';
+};
+window.kKopiraj=function(){
+  if(!kTrenutna)return;
+  const b=document.getElementById('kCopy');
+  const done=()=>{b.textContent='✓ u džepu';setTimeout(()=>{b.textContent='⎘ Prepiši'},1400)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(kTrenutna).then(done).catch(done)}
+  else done();
+};
 
 /* ---- Instalacija (PWA) ---- */
 let deferredPrompt=null;
