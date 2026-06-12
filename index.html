@@ -163,9 +163,14 @@
     padding:1.6rem 1.4rem;min-height:120px;display:flex;align-items:center;box-shadow:var(--shadow);
   }
   .k-glass p{font-family:var(--display);font-style:italic;font-size:17.5px;line-height:1.7;color:var(--text);transition:opacity .35s;margin:0}
-  .k-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.8rem;color:var(--text3);font-size:12px;letter-spacing:.03em}
-  .k-copy{background:none;border:1px solid var(--border);border-radius:20px;padding:.45rem .95rem;color:var(--accent);font-size:12.5px;cursor:pointer;font-family:var(--body);transition:background .2s}
+  .k-helena{margin:.7rem .2rem 0;font-size:13px;color:var(--text3);font-style:italic;line-height:1.6;transition:opacity .35s}
+  .k-helena .hname{color:var(--accent-soft);font-style:normal;font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-right:.35rem}
+  .k-foot{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-top:.9rem;color:var(--text3);font-size:12px;letter-spacing:.03em;flex-wrap:wrap}
+  .k-actions{display:flex;gap:.5rem}
+  .k-copy{background:none;border:1px solid var(--border);border-radius:20px;padding:.45rem .95rem;color:var(--text2);font-size:12.5px;cursor:pointer;font-family:var(--body);transition:background .2s}
   .k-copy:active{background:var(--surface2)}
+  .k-razradi{background:none;border:1px solid var(--accent-soft);border-radius:20px;padding:.45rem .95rem;color:var(--accent);font-size:12.5px;cursor:pointer;font-family:var(--body);transition:background .2s}
+  .k-razradi:active{background:var(--surface2)}
 </style>
 </head>
 <body>
@@ -183,7 +188,7 @@
     <div class="section-hint" id="lib-hint">Tvoje priče</div>
     <div id="story-list"></div>
     <button class="add-btn" onclick="openNewStory()">✒ Nova priča</button>
-    <button class="kafana-btn" onclick="openKafana()">🥃 Kafana <span class="k-sub">· otvoreno do zore</span></button>
+    <button class="kafana-btn" onclick="openKafana()">🥃 Kafana „Kod Helene" <span class="k-sub">· otvoreno do zore</span></button>
   </div>
 </div>
 
@@ -218,16 +223,20 @@
 
 <div class="screen" id="screen-kafana">
   <div class="list-wrap">
-    <div class="section-hint">Šank · samo za pisce</div>
+    <div class="section-hint">Šank · Helena toči</div>
     <div class="kafana-btns">
       <button class="k-btn" onclick="sipaj('recenice')">✒ Prva rečenica</button>
       <button class="k-btn" onclick="sipaj('likovi')">👤 Lik za priču</button>
       <button class="k-btn" onclick="sipaj('pitanja')">🌙 Pitanje za 3 ujutru</button>
     </div>
     <div class="k-glass" id="kGlass"><p id="kTekst">Sedi. Šta pijemo večeras?</p></div>
+    <div class="k-helena" id="kHelena"><span class="hname">Helena</span>Ja sipam, ti pišeš. Takav je dogovor.</div>
     <div class="k-foot">
       <span id="kBrojac">popijeno: 0</span>
-      <button class="k-copy" id="kCopy" onclick="kKopiraj()" style="display:none">⎘ Prepiši</button>
+      <div class="k-actions">
+        <button class="k-copy" id="kCopy" onclick="kKopiraj()" style="display:none">⎘ Prepiši</button>
+        <button class="k-razradi" id="kRazradi" onclick="kRazradi()" style="display:none">🥃 Razradi sa Helenom</button>
+      </div>
     </div>
   </div>
 </div>
@@ -339,7 +348,7 @@ function show(v){
   else if(v==='chapters')title.textContent=story(curStory)?.title||'';
   else if(v==='editor')title.textContent=chapter(story(curStory),curChapter)?.title||'';
   else if(v==='settings')title.textContent='Podešavanja';
-  else if(v==='kafana')title.textContent='Kafana';
+  else if(v==='kafana')title.textContent='Kod Helene';
   renderStreak();
 }
 function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
@@ -602,17 +611,36 @@ const kFlase={
     "Da li je samoća kazna ili odgovor?"
   ]
 };
+const kKomentari=[
+  "Ovu ne sipam svakome.",
+  "Polako s tim, jaka je.",
+  "Vidi ga, došao po inspiraciju ko drugi po rakiju.",
+  "Ako te ne preseče, sledeća je dupla.",
+  "Tu sam do zore. Ne žuri.",
+  "Pij polako, piši brzo.",
+  "Ova flaša je dugo stajala. Taman je.",
+  "Ne gledaj mene, ja samo sipam — ti pišeš.",
+  "Kuca ti se priča, vidim po pogledu.",
+  "Posle pete ne odgovaram za to šta napišeš.",
+  "Ovo su pili bolji od tebe. I gori. Isti ukus.",
+  "Račun ide na priču. Ako je napišeš."
+];
 let kRedovi={},kPopijeno=0,kTrenutna='';
 function kPromesaj(n){const a=[...Array(n).keys()];for(let i=n-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 window.sipaj=function(kat){
   if(!kRedovi[kat]||!kRedovi[kat].length)kRedovi[kat]=kPromesaj(kFlase[kat].length);
   kTrenutna=kFlase[kat][kRedovi[kat].pop()];
-  const t=document.getElementById('kTekst');
-  t.style.opacity=0;
-  setTimeout(()=>{t.textContent='„'+kTrenutna+'“';t.style.opacity=1},280);
+  const t=document.getElementById('kTekst'),h=document.getElementById('kHelena');
+  t.style.opacity=0;h.style.opacity=0;
+  setTimeout(()=>{
+    t.textContent='„'+kTrenutna+'“';t.style.opacity=1;
+    h.innerHTML='<span class="hname">Helena</span>'+kKomentari[Math.floor(Math.random()*kKomentari.length)];
+    h.style.opacity=1;
+  },280);
   kPopijeno++;
   document.getElementById('kBrojac').textContent='popijeno: '+kPopijeno;
   document.getElementById('kCopy').style.display='inline-block';
+  document.getElementById('kRazradi').style.display='inline-block';
 };
 window.kKopiraj=function(){
   if(!kTrenutna)return;
@@ -620,6 +648,11 @@ window.kKopiraj=function(){
   const done=()=>{b.textContent='✓ u džepu';setTimeout(()=>{b.textContent='⎘ Prepiši'},1400)};
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(kTrenutna).then(done).catch(done)}
   else done();
+};
+window.kRazradi=function(){
+  if(!kTrenutna)return;
+  const poruka='Helena, sipala si mi ovo u kafani u Pisalnici: „'+kTrenutna+'“ — hajde da razradimo priču iz toga.';
+  window.open('https://claude.ai/new?q='+encodeURIComponent(poruka),'_blank');
 };
 
 /* ---- Instalacija (PWA) ---- */
